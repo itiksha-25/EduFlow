@@ -2,14 +2,15 @@ import java.util.*;
 
 public class Main {
 
-    public static class Student     //class 1
-    {
-        int id;                             //instance variables for class 1
+    // class 1
+    public static class Student {
+
+        int id;
         String name, department, project, projectStatus;
         double attendance, marks;
 
-        Student(int id, String name, String department) //Parameterised Constructor
-        { 
+        // Parameterised Constructor
+        public Student(int id, String name, String department) {
             this.id = id;
             this.name = name;
             this.department = department;
@@ -18,574 +19,340 @@ public class Main {
             this.project = "Not Assigned";
             this.projectStatus = "Not Started";
         }
-
-        String getGrade()       //to give grades to students
-        {
-            if (marks >= 90) return "A+";
-            if (marks >= 80) return "A";
-            if (marks >= 70) return "B";
-            if (marks >= 60) return "C";
-            if (marks >= 50) return "D";
-            return "F";                    //if none of the above marks 
-        }
-
-        boolean isEligible()       //to give exam or sit for exam
-        {
-            return attendance >= 75;
-        }
     }
 
-    public static class Exam     //class 2
-    {
-        int id;                            //instance variables for class 2
-        String subject, date, time, room;
+    static Scanner sc = new Scanner(System.in);
 
-        Exam(int id, String subject, String date, String time, String room)   //parameterized constructor
-        {
-            this.id = id;
-            this.subject = subject;
-            this.date = date;
-            this.time = time;
-            this.room = room;
-        }
-    }
+    // name list
+    static ArrayList<Student> students = new ArrayList<>();
 
-    static Scanner sc = new Scanner(System.in);      //for input of variables and data
-
-    static ArrayList<Student> students = new ArrayList<>();    //name list
-    static ArrayList<Exam> exams = new ArrayList<>();    //exams list
-
-    static int nextStudentId = 1;      //roll number of students
-    static int nextExamId = 1;          //exam number
+    // roll number of students
+    static int nextStudentId = 1;
 
 
-    public static void main(String[] args) 
-    {
-        addSampleData();
+    public static void main(String[] args) {
 
-        System.out.println("\n----------------------------------");    //designer print for display
-        System.out.println("              EDUFLOW");
-        System.out.println(" Academic Progress Management System");
-        System.out.println("======------------------------======");
+        Database.initializeDatabase();
 
-        while (true) 
-        {
-            showMenu();
-            int choice = readInt("Enter your choice: ");
-            try 
-              {
-                switch (choice) 
-                {
-                    case 1: addStudent();  break;
-                    case 2:viewStudents(); break;
-                    case 3:     updateAttendance();break;
-                    case 4:
-                        attendanceWhatIf(); break;
+        students.addAll(Database.loadStudents());
 
-                    case 5: addExam();
-                        break;
-
-                    case 6: viewExams();  break;
-                    case 7:  addMarks();break;
-
-                    case 8:   manageProject();  break;
-
-                    case 9:showProgress();break;
-                    case 10:generateReport();break;
-                    case 0:
-                        System.out.println("\nThank you for using EduFlow!");
-                        System.out.println("Exiting...");
-                        scanner.close(); return;
-                    default: System.out.println("Invalid choice. Please try again.");
-                }
-
-            } catch (Exception e) 
-              {
-                System.out.println("\nError: " + e.getMessage());
-                System.out.println("Please try again.");
+        // updating next id
+        for (Student s : students) {
+            if (s.id >= nextStudentId) {
+                nextStudentId = s.id + 1;
             }
         }
+
+        // sample data only if database is empty
+        if (students.isEmpty()) {
+            addSampleData();
+
+            for (Student s : students) {
+                Database.saveStudent(s);
+            }
+        }
+
+        System.out.println("\n=================================");
+        System.out.println("          E D U F L O W");
+        System.out.println("   Academic Attendance System");
+        System.out.println("=================================");
+
+        int choice = 0;
+
+        while (choice != 5) {
+
+            System.out.println("\n----------- MENU -----------");
+            System.out.println("1. Add Student");
+            System.out.println("2. View Students");
+            System.out.println("3. Update Attendance");
+            System.out.println("4. Attendance What-If Calculator");
+            System.out.println("5. Exit");
+            System.out.println("----------------------------");
+
+            choice = readInt("Enter your choice: ");
+
+            try {
+
+                switch (choice) {
+
+                    case 1:
+                        addStudent();
+                        break;
+
+                    case 2:
+                        viewStudents();
+                        break;
+
+                    case 3:
+                        updateAttendance();
+                        break;
+
+                    case 4:
+                        attendanceWhatIf();
+                        break;
+
+                    case 5:
+                        System.out.println("\nExiting EduFlow...");
+                        break;
+
+                    default:
+                        System.out.println("Invalid choice.");
+
+                }
+
+            } catch (Exception e) {
+                System.out.println("Something went wrong: " + e.getMessage());
+            }
+        }
+
+        sc.close();
     }
 
-    static void showMenu() 
-  {
 
-        System.out.println("\n--------------- MAIN MENU ---------------");
-        System.out.println("1.  Add Student");
-        System.out.println("2.  View Students");
-        System.out.println("3.  Update Attendance");
-        System.out.println("4.  Attendance What-If Calculator");
-        System.out.println("5.  Schedule Exam");
-        System.out.println("6.  View Exams");
-        System.out.println("7.  Add / Update Marks");
-        System.out.println("8.  Manage Project");
-        System.out.println("9.  View Academic Progress");
-        System.out.println("10. Generate Academic Report");
-        System.out.println("0.  Exit");
-        System.out.println("-----------------------------------------");
-    }
+    public static void addStudent() {
 
-    public static void addStudent() 
-    {
-        System.out.println("\n========== ADD STUDENT ==========");
+        System.out.println("\n--- Add Student ---");
 
-        String name = readString("Student name: ");
-        String department = readString("Department: ");
+        String name = readString("Enter student name: ");
+        String department = readString("Enter department: ");
 
-        Student student = new Student(nextStudentId++, name, department);
-
-        students.add(student);       //adding student to the list
-
-        System.out.println("\nStudent added successfully!");
-        System.out.println("Student ID: " + student.id);
-    }
-
-
-    static void viewStudents() 
-    {
-        System.out.println("\n========== STUDENTS ==========");
-
-        if(students.isEmpty()) 
-        {
-            System.out.println("No students found.");
+        if (name.trim().isEmpty() || department.trim().isEmpty()) {
+            System.out.println("Name and department cannot be empty.");
             return;
         }
 
-        for(Student s : students) 
-        {
-            System.out.println("--------------------------------");
-            System.out.println("ID          : " + s.id);
-            System.out.println("Name        : " + s.name);
-            System.out.println("Department  : " + s.department);
-            System.out.printf("Attendance  : %.2f%%%n", s.attendance);
-            System.out.println("Marks       : " + s.marks);
-            System.out.println("Grade       : " + s.getGrade());
-            System.out.println("Project     : " + s.project);
-            System.out.println("Project Status : " + s.projectStatus);
-            System.out.println("Eligibility : " +
-                    (s.isEligible() ? "Eligible" : "Not Eligible"));
+        Student s = new Student(nextStudentId, name, department);
+
+        students.add(s);
+        Database.saveStudent(s);
+
+        System.out.println("Student added successfully.");
+        System.out.println("Student ID: " + s.id);
+
+        nextStudentId++;
+    }
+
+
+    public static void viewStudents() {
+
+        System.out.println("\n--- Student List ---");
+
+        if (students.isEmpty()) {
+            System.out.println("No students available.");
+            return;
+        }
+
+        System.out.printf("%-5s %-20s %-15s %-12s %-15s%n",
+                "ID", "Name", "Department", "Attendance", "Status");
+
+        System.out.println("----------------------------------------------------------------");
+
+        for (Student s : students) {
+
+            String status;
+
+            if (s.attendance >= 75) {
+                status = "Eligible";
+            } else {
+                status = "Not Eligible";
+            }
+
+            System.out.printf("%-5d %-20s %-15s %-11.2f%% %-15s%n",
+                    s.id,
+                    s.name,
+                    s.department,
+                    s.attendance,
+                    status);
         }
     }
 
 
-    static Student findStudent(int id) 
-    {
-        for(Student s : students) 
-        {
-            if(s.id == id) 
-            {
+    public static Student findStudent(int id) {
+
+        for (Student s : students) {
+
+            if (s.id == id) {
                 return s;
             }
         }
 
-        throw new IllegalArgumentException(
-                "Student with ID " + id + " not found."
-        );
+        return null;
     }
 
 
-    // Attendance part
-    static void updateAttendance() 
-    {
-        System.out.println("\n========== ATTENDANCE ==========");
+    public static void updateAttendance() {
 
-        int id = readInt("Student ID: ");
-        Student student = findStudent(id);
+        System.out.println("\n--- Update Attendance ---");
 
-        double attendance = readDouble("Enter attendance percentage: ");
+        int id = readInt("Enter student ID: ");
 
-        if(attendance < 0 || attendance > 100) 
-        {
-            throw new IllegalArgumentException(
-                    "Attendance must be between 0 and 100."
-            );
-        }
+        Student s = findStudent(id);
 
-        student.attendance = attendance;
-
-        System.out.printf(
-                "Attendance updated to %.2f%%%n",
-                attendance
-        );
-
-        if(student.isEligible()) 
-        {
-            System.out.println("Status: Eligible for examination.");
-        }
-        else 
-        {
-            System.out.println("Status: Not eligible for examination.");
-        }
-    }
-
-
-    static void attendanceWhatIf() 
-    {
-        System.out.println("\n====== ATTENDANCE WHAT-IF ======");
-
-        int id = readInt("Student ID: ");
-        Student student = findStudent(id);
-
-        int totalClasses = readInt("Total classes conducted: ");
-        int attendedClasses = readInt("Classes attended: ");
-        int futureClasses = readInt("Additional classes you plan to attend: ");
-
-        if(totalClasses <= 0 || attendedClasses < 0 ||
-                futureClasses < 0 || attendedClasses > totalClasses) 
-        {
-            throw new IllegalArgumentException("Invalid class values.");
-        }
-
-        int finalAttended = attendedClasses + futureClasses;
-        int finalTotal = totalClasses + futureClasses;
-
-        double projectedAttendance =
-                (finalAttended * 100.0) / finalTotal;
-
-        System.out.printf(
-                "\nProjected Attendance: %.2f%%%n",
-                projectedAttendance
-        );
-
-        if(projectedAttendance >= 75) 
-        {
-            System.out.println(
-                    "Result: You will meet the 75% eligibility requirement."
-            );
-        }
-        else 
-        {
-            System.out.println(
-                    "Result: You will still be below the 75% requirement."
-            );
-        }
-    }
-
-
-    // Exam scheduling
-    static void addExam() 
-    {
-        System.out.println("\n========== SCHEDULE EXAM ==========");
-
-        String subject = readString("Subject: ");
-        String date = readString("Date (DD-MM-YYYY): ");
-        String time = readString("Time: ");
-        String room = readString("Room: ");
-
-        for(Exam e : exams) 
-        {
-            if(e.date.equalsIgnoreCase(date) &&
-                    e.time.equalsIgnoreCase(time) &&
-                    e.room.equalsIgnoreCase(room)) 
-            {
-                throw new IllegalArgumentException(
-                        "Exam scheduling conflict! The room is already occupied at this time."
-                );
-            }
-        }
-
-        Exam exam = new Exam(
-                nextExamId++,
-                subject,
-                date,
-                time,
-                room
-        );
-
-        exams.add(exam);
-
-        System.out.println("\nExam scheduled successfully!");
-        System.out.println("Exam ID: " + exam.id);
-    }
-
-
-    static void viewExams() 
-    {
-        System.out.println("\n========== EXAM SCHEDULE ==========");
-
-        if(exams.isEmpty()) 
-        {
-            System.out.println("No exams scheduled.");
+        if (s == null) {
+            System.out.println("Student not found.");
             return;
         }
 
-        for(Exam e : exams) 
-        {
-            System.out.println("--------------------------------");
-            System.out.println("Exam ID : " + e.id);
-            System.out.println("Subject : " + e.subject);
-            System.out.println("Date    : " + e.date);
-            System.out.println("Time    : " + e.time);
-            System.out.println("Room    : " + e.room);
+        System.out.println("Student: " + s.name);
+
+        int conducted = readInt("Enter total classes conducted: ");
+        int attended = readInt("Enter classes attended: ");
+
+        if (conducted <= 0) {
+            System.out.println("Total classes must be greater than 0.");
+            return;
+        }
+
+        if (attended < 0 || attended > conducted) {
+            System.out.println("Invalid number of attended classes.");
+            return;
+        }
+
+        s.attendance = ((double) attended / conducted) * 100;
+
+        Database.saveStudent(s);
+
+        System.out.printf("Attendance updated: %.2f%%%n", s.attendance);
+
+        if (s.attendance >= 75) {
+            System.out.println("Status: Eligible for exam.");
+        } else {
+            System.out.println("Status: Not eligible for exam.");
+            System.out.println("Use the What-If Calculator to check required classes.");
         }
     }
 
 
-    static void addMarks() 
-    {
-        System.out.println("\n========== RESULTS ==========");
+    public static void attendanceWhatIf() {
 
-        int id = readInt("Student ID: ");
-        Student student = findStudent(id);
+        System.out.println("\n--- Attendance What-If Calculator ---");
 
-        double marks = readDouble("Enter marks (0-100): ");
+        int id = readInt("Enter student ID: ");
 
-        if(marks < 0 || marks > 100) 
-        {
-            throw new IllegalArgumentException(
-                    "Marks must be between 0 and 100."
-            );
+        Student s = findStudent(id);
+
+        if (s == null) {
+            System.out.println("Student not found.");
+            return;
         }
 
-        student.marks = marks;
+        System.out.println("Student: " + s.name);
 
-        System.out.println("\nMarks updated successfully.");
-        System.out.println("Grade: " + student.getGrade());
+        int total = readInt("Enter total classes conducted: ");
+        int attended = readInt("Enter classes attended: ");
+
+        if (total <= 0 || attended < 0 || attended > total) {
+            System.out.println("Invalid attendance data.");
+            return;
+        }
+
+        double currentAttendance =
+                ((double) attended / total) * 100;
+
+        System.out.printf("Current attendance: %.2f%%%n",
+                currentAttendance);
+
+        if (currentAttendance >= 75) {
+            System.out.println("You already have 75% or more attendance.");
+            return;
+        }
+
+        int needed = 0;
+
+        while (((double) (attended + needed) /
+                (total + needed)) * 100 < 75) {
+
+            needed++;
+        }
+
+        double finalAttendance =
+                ((double) (attended + needed) /
+                (total + needed)) * 100;
+
+        System.out.println("Classes you need to attend continuously: "
+                + needed);
+
+        System.out.printf("Attendance after that: %.2f%%%n",
+                finalAttendance);
     }
 
 
-    static void manageProject() 
-    {
-        System.out.println("\n========== PROJECT TRACKER ==========");
+    public static int readInt(String message) {
 
-        int id = readInt("Student ID: ");
-        Student student = findStudent(id);
+        while (true) {
 
-        String project = readString("Project name: ");
+            try {
 
-        System.out.println("\nSelect project status:");
-        System.out.println("1. Not Started");
-        System.out.println("2. In Progress");
-        System.out.println("3. Completed");
+                System.out.print(message);
 
-        int status = readInt("Status: ");
+                String input = sc.nextLine();
 
-        String projectStatus;
+                return Integer.parseInt(input);
 
-        switch(status) 
-        {
-            case 1:
-                projectStatus = "Not Started";
-                break;
+            } catch (NumberFormatException e) {
 
-            case 2:
-                projectStatus = "In Progress";
-                break;
-
-            case 3:
-                projectStatus = "Completed";
-                break;
-
-            default:
-                throw new IllegalArgumentException(
-                        "Invalid project status."
-                );
-        }
-
-        student.project = project;
-        student.projectStatus = projectStatus;
-
-        System.out.println("\nProject updated successfully.");
-    }
-
-
-    // calculates the overall progress of student
-    static void showProgress() 
-    {
-        System.out.println("\n========== ACADEMIC PROGRESS ==========");
-
-        int id = readInt("Student ID: ");
-        Student student = findStudent(id);
-
-        double attendanceScore = student.attendance;
-        double academicScore = student.marks;
-
-        double projectScore;
-
-        if(student.projectStatus.equals("Completed")) 
-        {
-            projectScore = 100;
-        }
-        else if(student.projectStatus.equals("In Progress")) 
-        {
-            projectScore = 60;
-        }
-        else 
-        {
-            projectScore = 0;
-        }
-
-        double overallProgress =
-                (attendanceScore * 0.30) +
-                (academicScore * 0.50) +
-                (projectScore * 0.20);
-
-        System.out.println("\nStudent: " + student.name);
-
-        System.out.printf(
-                "Attendance Score : %.2f%%%n",
-                attendanceScore
-        );
-
-        System.out.printf(
-                "Academic Score   : %.2f%%%n",
-                academicScore
-        );
-
-        System.out.printf(
-                "Project Score    : %.2f%%%n",
-                projectScore
-        );
-
-        System.out.printf(
-                "Overall Progress : %.2f%%%n",
-                overallProgress
-        );
-
-        System.out.println(
-                "Eligibility      : " +
-                (student.isEligible() ? "Eligible" : "Not Eligible")
-        );
-
-        if(overallProgress >= 75) 
-        {
-            System.out.println("Progress Status  : Good");
-        }
-        else if(overallProgress >= 50) 
-        {
-            System.out.println("Progress Status  : Needs Improvement");
-        }
-        else 
-        {
-            System.out.println("Progress Status  : At Risk");
+                System.out.println("Please enter a valid number.");
+            }
         }
     }
 
 
-    static void generateReport() 
-    {
-        System.out.println("\n========== ACADEMIC REPORT ==========");
+    public static double readDouble(String message) {
 
-        int id = readInt("Student ID: ");
-        Student student = findStudent(id);
+        while (true) {
 
-        System.out.println("\n======================================");
-        System.out.println("          EDUFLOW REPORT");
-        System.out.println("======================================");
+            try {
 
-        System.out.println("Student ID   : " + student.id);
-        System.out.println("Name         : " + student.name);
-        System.out.println("Department   : " + student.department);
+                System.out.print(message);
 
-        System.out.printf(
-                "Attendance   : %.2f%%%n",
-                student.attendance
-        );
+                String input = sc.nextLine();
 
-        System.out.println(
-                "Eligibility  : " +
-                (student.isEligible() ? "Eligible" : "Not Eligible")
-        );
+                return Double.parseDouble(input);
 
-        System.out.println("Marks        : " + student.marks);
-        System.out.println("Grade        : " + student.getGrade());
+            } catch (NumberFormatException e) {
 
-        System.out.println("Project      : " + student.project);
-        System.out.println("Project Status : " + student.projectStatus);
-
-        System.out.println("======================================");
+                System.out.println("Please enter a valid number.");
+            }
+        }
     }
 
 
-    // taking input as text first makes it easier to handle errors
-    static String readString(String message) 
-    {
+    public static String readString(String message) {
+
         System.out.print(message);
 
-        String value = sc.nextLine().trim();
-
-        if(value.isEmpty()) 
-        {
-            throw new IllegalArgumentException(
-                    "Input cannot be empty."
-            );
-        }
-
-        return value;
+        return sc.nextLine();
     }
 
 
-    static int readInt(String message) 
-    {
-        System.out.print(message);
+    public static void addSampleData() {
 
-        String input = sc.nextLine().trim();
-
-        try 
-        {
-            return Integer.parseInt(input);
-        }
-        catch(NumberFormatException e) 
-        {
-            throw new IllegalArgumentException(
-                    "Please enter a valid number."
-            );
-        }
-    }
-
-
-    static double readDouble(String message) 
-    {
-        System.out.print(message);
-
-        String input = sc.nextLine().trim();
-
-        try 
-        {
-            return Double.parseDouble(input);
-        }
-        catch(NumberFormatException e) 
-        {
-            throw new IllegalArgumentException(
-                    "Please enter a valid numeric value."
-            );
-        }
-    }
-
-
-    static void addSampleData() 
-    {
         Student s1 = new Student(
                 nextStudentId++,
-                "Aarav Sharma",
+                "Aarav",
                 "CSE"
         );
 
-        s1.attendance = 82;
-        s1.marks = 88;
-        s1.project = "Smart Campus";
-        s1.projectStatus = "In Progress";
-
-        students.add(s1);
+        s1.attendance = 82.5;
 
         Student s2 = new Student(
                 nextStudentId++,
-                "Ananya Patel",
+                "Riya",
+                "ECE"
+        );
+
+        s2.attendance = 68.0;
+
+        Student s3 = new Student(
+                nextStudentId++,
+                "Kabir",
                 "CSE"
         );
 
-        s2.attendance = 68;
-        s2.marks = 74;
-        s2.project = "EduTrack";
-        s2.projectStatus = "Completed";
+        s3.attendance = 91.0;
 
+        students.add(s1);
         students.add(s2);
-
-        exams.add(new Exam(
-                nextExamId++,
-                "Java Programming",
-                "20-09-2026",
-                "10:00 AM",
-                "Lab-101"
-        ));
+        students.add(s3);
     }
+}
