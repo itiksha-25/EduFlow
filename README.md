@@ -1,2 +1,4 @@
 # EduFlow
-A beginner friendly app that brings attendance, exams, results, and projects together to give students and faculty one complete view of academic progress.”
+## Academic Progress & Examination Management System
+
+A Java-based academic management system that integrates attendance, examinations, results, and project tracking into a unified platform for students and faculty.
